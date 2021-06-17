@@ -61,31 +61,3 @@ mvn compile exec:java -Dexec.mainClass="com.mongodb.quickstart.Update" -Dmongodb
 ```sh
 mvn compile exec:java -Dexec.mainClass="com.mongodb.quickstart.Delete" -Dmongodb.uri="mongodb+srv://USERNAME:PASSWORD@cluster0-abcde.mongodb.net/test?w=majority"
 ```
-
-- Run the `MappingPOJO` class:
-
-```sh
-mvn compile exec:java -Dexec.mainClass="com.mongodb.quickstart.MappingPOJO" -Dmongodb.uri="mongodb+srv://USERNAME:PASSWORD@cluster0-abcde.mongodb.net/test?w=majority"
-```
-
-- Run the `AggregationFramework` class:
-
-```sh
-mvn compile exec:java -Dexec.mainClass="com.mongodb.quickstart.AggregationFramework" -Dmongodb.uri="mongodb+srv://USERNAME:PASSWORD@cluster0-abcde.mongodb.net/test?w=majority"
-```
-
-- Run the `ChangeStreams` class:
-
-```sh
-mvn compile exec:java -Dexec.mainClass="com.mongodb.quickstart.ChangeStreams" -Dmongodb.uri="mongodb+srv://USERNAME:PASSWORD@cluster0-abcde.mongodb.net/test?w=majority"
-```
-
-- Run the `ClientSideFieldLevelEncryption` class:
-```sh
-mvn compile exec:java -Dexec.mainClass="com.mongodb.quickstart.csfle.ClientSideFieldLevelEncryption" -Dmongodb.uri="mongodb+srv://USERNAME:PASSWORD@cluster0-abcde.mongodb.net/test?w=majority"
-```
-
-
-# Author
-
-Maxime Beugnet <maxime@mongodb.com>
