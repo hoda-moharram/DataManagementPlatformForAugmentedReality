@@ -20,7 +20,7 @@ public class Create {
 
     static {
         try {
-            out = new PrintWriter(new FileOutputStream("LogFile.txt", true));
+            out = new PrintWriter(new FileOutputStream("data/LogFile.txt", true));
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         }
@@ -31,11 +31,11 @@ public class Create {
         try (MongoClient mongoClient = MongoClients.create(System.getProperty("mongodb.uri"))) {
             MongoDatabase sampleTrainingDB = mongoClient.getDatabase("sample_training");
             MongoCollection<Document> fileCollections = sampleTrainingDB.getCollection("Just work");
-            String filePath = "C:/Users/Zeina Kandil/Downloads/ergonomic-bottle-1.snapshot.2/Bottle.iges";
+            String filePath = "C:/Users/Zeina Kandil/Downloads/ergonomic-bottle-1.snapshot.2/Bottle.obj";
 
             String filePath2 = "C:/Users/Zeina Kandil/Downloads/ergonomic-bottle-1.snapshot.2/Bottle.step";
 //            insertOneDocument(filePath);
-            ArrayList<String > filePaths = new ArrayList<>(); filePaths.add(filePath); filePaths.add(filePath2);
+            ArrayList<String > filePaths = new ArrayList<>(); filePaths.add(filePath); filePaths.add(filePath2); filePaths.add(filePath2);
             insertManyDocuments(filePaths);
         } catch (FileNotFoundException e) {
             e.printStackTrace();
@@ -61,13 +61,14 @@ public class Create {
 
     private static void insertManyDocuments(ArrayList<String> filePaths) throws FileNotFoundException {
         HashSet<String> hsFilePaths = getValidFilePaths(filePaths);
+        if(hsFilePaths.isEmpty())
+            return;
         MongoCollection<Document> filesCollection = getFilesCollection();
         List<Document> files = new ArrayList<>();
         for (String filePath: hsFilePaths) {
             Document document = saveNewFile(filePath);
             files.add(document);
         }
-
         filesCollection.insertMany(files, new InsertManyOptions().ordered(false));
     }
 
@@ -97,8 +98,8 @@ public class Create {
             }else{
                 out.println(filePath + " was not added to the database as there is another file with the same file path.");
             }
-
         }
+        out.flush();
         return hsFilePaths;
     }
 
