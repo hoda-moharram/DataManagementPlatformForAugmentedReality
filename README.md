@@ -1,4 +1,4 @@
-# Java Quick Start Project
+# Java Quick Start Project -- AR Data Management Platform
 
 This repository contains code samples for the Quick Start blog post series.
 
