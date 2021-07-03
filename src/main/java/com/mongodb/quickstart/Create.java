@@ -30,11 +30,10 @@ public class Create {
     public static void main(String[] args) {
         try (MongoClient mongoClient = MongoClients.create(System.getProperty("mongodb.uri"))) {
             MongoDatabase sampleTrainingDB = mongoClient.getDatabase("sample_training");
-            MongoCollection<Document> fileCollections = sampleTrainingDB.getCollection("Just work");
+            MongoCollection<Document> fileCollections = sampleTrainingDB.getCollection("ARObjectsDatabase");
             String filePath = "C:/Users/Zeina Kandil/Downloads/ergonomic-bottle-1.snapshot.2/Bottle.obj";
 
             String filePath2 = "C:/Users/Zeina Kandil/Downloads/ergonomic-bottle-1.snapshot.2/Bottle.step";
-//            insertOneDocument(filePath);
             ArrayList<String > filePaths = new ArrayList<>(); filePaths.add(filePath); filePaths.add(filePath2); filePaths.add(filePath2);
             insertManyDocuments(filePaths);
         } catch (FileNotFoundException e) {
@@ -45,7 +44,7 @@ public class Create {
     private static MongoCollection<Document> getFilesCollection(){
         MongoClient mongoClient = MongoClients.create(System.getProperty("mongodb.uri"));
         MongoDatabase sampleTrainingDB = mongoClient.getDatabase("sample_training");
-        return sampleTrainingDB.getCollection("Just work");
+        return sampleTrainingDB.getCollection("ARObjectsDatabase");
     }
 
     private static void insertOneDocument(String filePath) throws FileNotFoundException {
@@ -59,6 +58,9 @@ public class Create {
             System.out.println("Previously Inserted. Cannot insert twice.");
     }
 
+    /* Takes as input an Arraylist of FilePaths and inserts only valid FilePaths
+    into the database with no duplicates
+    */
     private static void insertManyDocuments(ArrayList<String> filePaths) throws FileNotFoundException {
         HashSet<String> hsFilePaths = getValidFilePaths(filePaths);
         if(hsFilePaths.isEmpty())
