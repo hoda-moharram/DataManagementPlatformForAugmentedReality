@@ -22,44 +22,65 @@ This class is concerned with all create operations in a
 public class Create extends CRUD{
 
     public static void main(String[] args) {
-        try (MongoClient mongoClient = MongoClients.create("mongodb+srv://m220student:m220password@cluster0.fehw5.mongodb.net/myFirstDatabase?retryWrites=true&w=majority")) {
+        try (MongoClient mongoClient = MongoClients.create(System.getProperty("mongodb.uri"))) {
             MongoDatabase sampleTrainingDB = mongoClient.getDatabase("sample_training");
             MongoCollection<Document> fileCollections = sampleTrainingDB.getCollection("ARObjectsDatabase");
-            String filePath = "/Users/hodamoharram/Desktop/Bottle.step";
+            String filePath = "C:/Users/Zeina Kandil/Downloads/ergonomic-bottle-1.snapshot.2/Bottle.obj";
 
-            String filePath2 = "/Users/hodamoharram/Desktop/1539987097.pdf";
+            String filePath2 = "C:/Users/Zeina Kandil/Downloads/ergonomic-bottle-1.snapshot.2/Bottle.step";
             ArrayList<String > filePaths = new ArrayList<>(); filePaths.add(filePath); filePaths.add(filePath2); filePaths.add(filePath2);
             insertManyDocuments(filePaths);
-        } catch (FileNotFoundException e) {
+            insertOneDocument("C:/Users/Zeina Kandil/Downloads/ergonomighjhgfghc-bottle-1.snapshot.2/Bottle.stls");
+            insertOneDocument("C:/Users/Zeina Kandil/Downloads/ergonomic-bottle-1.snapshot.2/Bottle.stl");
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-    private static void insertOneDocument(String filePath) throws FileNotFoundException {
+    /* Takes as input a FilePath and inserts only valid FilePaths
+    into the database with no duplicates
+    */
+    private static void insertOneDocument(String filePath){
+        insertOneDocument(filePath, "Default file description");
+    }
+    private static void insertOneDocument(String filePath, String fileDescription){
         MongoCollection<Document> filesCollection = getFilesCollection();
         if(filesCollection.countDocuments(eq("FilePath", filePath)) == 0){
-            Document document = saveNewFile(filePath);
+            Document document = saveNewFile(filePath, fileDescription);
+            if(document == null){
+                out.println(filePath + " is an invalid file Path and was not added to the database on " + new Date());
+                out.flush();
+                return;
+            }
+            updateStatistics(document);
             filesCollection.insertOne(document);
-            System.out.println("One File inserted.");
+            out.println(filePath + " has been added to the database successfully on " + new Date());
         }
         else
-            System.out.println("Previously Inserted. Cannot insert twice.");
+            out.println(filePath + " was not added to the database as there is another file with the same file path on " + new Date());
+        out.flush();
     }
 
     /* Takes as input an Arraylist of FilePaths and inserts only valid FilePaths
     into the database with no duplicates
     */
-    private static void insertManyDocuments(ArrayList<String> filePaths) throws FileNotFoundException {
+    private static void insertManyDocuments(ArrayList<String> filePaths){
         HashSet<String> hsFilePaths = getValidFilePaths(filePaths);
         if(hsFilePaths.isEmpty())
             return;
         MongoCollection<Document> filesCollection = getFilesCollection();
         List<Document> files = new ArrayList<>();
         for (String filePath: hsFilePaths) {
-            Document document = saveNewFile(filePath);
+            Document document = saveNewFile(filePath, "Default file description");
+            if(document == null){
+                out.println(filePath + " is an invalid file Path and was not added to the database on " + new Date());
+                continue;
+            }
+            updateStatistics(document);
             files.add(document);
         }
         filesCollection.insertMany(files, new InsertManyOptions().ordered(false));
+        out.flush();
     }
 
     /* Takes as input an Arraylist of FilePaths and returns a
@@ -75,18 +96,18 @@ public class Create extends CRUD{
             filePath = filePaths.get(i);
             file = new File(filePath);
             if (!file.exists() || !file.isFile()){
-                out.println(filePath + " is an invalid file path and was not added to the database.");
+                out.println(filePath + " is an invalid file path and was not added to the database on " + new Date());
                 continue;
             }
             if(filesCollection.countDocuments(eq("FilePath", filePath)) == 0){
                 if(hsFilePaths.contains(filePath)){
-                    out.println(filePath + " was not added to the database as there is another file with the same file path in the same insertMany operation.");
+                    out.println(filePath + " was not added to the database as there is another file with the same file path in the same insertMany operation on " + new Date());
                 }else{
                     hsFilePaths.add(filePath);
-                    out.println(filePath + " has been added to the database successfully");
+                    out.println(filePath + " has been added to the database successfully on " + new Date());
                 }
             }else{
-                out.println(filePath + " was not added to the database as there is another file with the same file path.");
+                out.println(filePath + " was not added to the database as there is another file with the same file path on " + new Date());
             }
         }
         out.flush();
@@ -94,13 +115,13 @@ public class Create extends CRUD{
     }
 
 
-    private static Document saveNewFile(String filePath){
+    private static Document saveNewFile(String filePath, String FileDescription){
         File file = new File(filePath);
         if (!file.exists() || !file.isFile()){
-            out.println(filePath + " is an invalid file Path and was not added to the database.");
+            return null;
         }
         String fileName = getFileName(filePath);
-        String fileDescription = "No description";
+        String fileDescription = FileDescription;
         Double fileSize = getFileSizeKiloBytes(file);
         Date date = new Date();
 
@@ -112,14 +133,12 @@ public class Create extends CRUD{
                 .append("CreatedOn", date)
                 .append("CountWrites", (Integer) 1)
                 .append("CountReads", (Integer) 0);
-        System.out.println(fileName + " " + fileSize + " " + date);
         return fileDoc;
     }
 
     private static void updateStatistics(Document fileDocument){
         //Retrieve collections
         MongoCollection<Document> statsCollection = getStatsCollection();
-        MongoCollection<Document> filesCollection = getFilesCollection();
 
         // Extract relevant attributes from fileDocument
         Double fileSize = (Double) fileDocument.get("FileSize in (KB)");
@@ -159,6 +178,5 @@ public class Create extends CRUD{
         Bson updateOperations = combine(update1, update2, update3, update4, update5);
         statsCollection.findOneAndUpdate(filter, updateOperations);
     }
-
 
 }
