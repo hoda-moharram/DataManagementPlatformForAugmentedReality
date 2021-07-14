@@ -139,7 +139,6 @@ public class Create extends CRUD{
     private static void updateStatistics(Document fileDocument){
         //Retrieve collections
         MongoCollection<Document> statsCollection = getStatsCollection();
-        MongoCollection<Document> filesCollection = getFilesCollection();
 
         // Extract relevant attributes from fileDocument
         Double fileSize = (Double) fileDocument.get("FileSize in (KB)");
