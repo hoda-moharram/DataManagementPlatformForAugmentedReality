@@ -1,0 +1,6 @@
+C:/Users/Zeina Kandil/Downloads/ergonomic-bottle-1.snapshot.2/Bottle.obj has been added to the database successfully
+C:/Users/Zeina Kandil/Downloads/ergonomic-bottle-1.snapshot.2/Bottle.step has been added to the database successfully
+C:/Users/Zeina Kandil/Downloads/ergonomic-bottle-1.snapshot.2/Bottle.step was not added to the database as there is another file with the same file path in the same insertMany operation.
+C:/Users/Zeina Kandil/Downloads/ergonomic-bottle-1.snapshot.2/Bottle.obj was not added to the database as there is another file with the same file path.
+C:/Users/Zeina Kandil/Downloads/ergonomic-bottle-1.snapshot.2/Bottle.step was not added to the database as there is another file with the same file path.
+C:/Users/Zeina Kandil/Downloads/ergonomic-bottle-1.snapshot.2/Bottle.step was not added to the database as there is another file with the same file path.
