@@ -6,24 +6,28 @@ import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.InsertManyOptions;
 import org.bson.Document;
+import org.bson.conversions.Bson;
 
 import java.io.*;
 import java.util.*;
 import java.util.List;
 
 import static com.mongodb.client.model.Filters.eq;
+import static com.mongodb.client.model.Updates.combine;
+import static com.mongodb.client.model.Updates.set;
+
 /*
 This class is concerned with all create operations in a
  */
 public class Create extends CRUD{
 
     public static void main(String[] args) {
-        try (MongoClient mongoClient = MongoClients.create(System.getProperty("mongodb.uri"))) {
+        try (MongoClient mongoClient = MongoClients.create("mongodb+srv://m220student:m220password@cluster0.fehw5.mongodb.net/myFirstDatabase?retryWrites=true&w=majority")) {
             MongoDatabase sampleTrainingDB = mongoClient.getDatabase("sample_training");
             MongoCollection<Document> fileCollections = sampleTrainingDB.getCollection("ARObjectsDatabase");
-            String filePath = "C:/Users/Zeina Kandil/Downloads/ergonomic-bottle-1.snapshot.2/Bottle.obj";
+            String filePath = "/Users/hodamoharram/Desktop/Bottle.step";
 
-            String filePath2 = "C:/Users/Zeina Kandil/Downloads/ergonomic-bottle-1.snapshot.2/Bottle.step";
+            String filePath2 = "/Users/hodamoharram/Desktop/1539987097.pdf";
             ArrayList<String > filePaths = new ArrayList<>(); filePaths.add(filePath); filePaths.add(filePath2); filePaths.add(filePath2);
             insertManyDocuments(filePaths);
         } catch (FileNotFoundException e) {
@@ -112,24 +116,49 @@ public class Create extends CRUD{
         return fileDoc;
     }
 
-    private static void updateStatistics(Document fileDoc){
-        try (MongoClient mongoClient = MongoClients.create(System.getProperty("mongodb.uri"))) {
-            MongoDatabase sampleTrainingDB = mongoClient.getDatabase("sample_training");
-            MongoCollection<Document> fileCollections = sampleTrainingDB.getCollection("AR_DB_Stats");
-            MongoCollection<Document> filesCollection = getFilesCollection();
-            /*
-            As create is the first operation that can be executed from the CRUD operations at the very first create call
-            there will be no stats. In this case we need to create a stats Document
-            */
-            if(fileCollections.countDocuments() == 0){
-                Document statsDoc = new Document("Files Count", "")
-                        .append("CountWrites", (Integer) 1)
-                        .append("CountReads", (Integer) 0);
-            }
+    private static void updateStatistics(Document fileDocument){
+        //Retrieve collections
+        MongoCollection<Document> statsCollection = getStatsCollection();
+        MongoCollection<Document> filesCollection = getFilesCollection();
 
-        } catch (Exception e) {
-            e.printStackTrace();
+        // Extract relevant attributes from fileDocument
+        Double fileSize = (Double) fileDocument.get("FileSize in (KB)");
+        Date lastUpdated = new Date();
+
+        /*
+        As create is the first operation that can be executed from the CRUD operations at the very first create call
+        there will be no stats. In this case we need to create a stats Document
+        */
+        if(statsCollection.countDocuments() == 0){
+            Document statsDoc = new Document("Name", "Statistics Document")
+                    .append("Files Count", 1)
+                    .append("CountTotalWrites", (Integer) 1)
+                    .append("CountTotalReads", (Integer) 0)
+                    .append("Total Files Storage Space in KB", fileSize)
+                    .append("Average File Size", fileSize)
+                    .append("FilesCollection lastUpdated", lastUpdated);
+            statsCollection.insertOne(statsDoc);
+            return;
         }
+
+        /*
+        Otherwise retrieve existing statsDocument and update it
+         */
+        Bson filter = eq("Name","Statistics Document");
+        Document statsDoc = statsCollection.find(filter).first();
+        int filesCount = (int) statsDoc.get("Files Count") + 1;
+        Double totalFileSizes = (Double) statsDoc.get("Total Files Storage Space in KB") + fileSize;
+        int totalWritesCount = (int) statsDoc.get("CountTotalWrites") + 1;
+        Double avgFileSize = totalFileSizes / filesCount;
+
+        Bson update1 = set("Files Count", filesCount);
+        Bson update2 = set("Total Files Storage Space in KB", totalFileSizes);
+        Bson update3 = set("CountTotalWrites", totalWritesCount);
+        Bson update4 = set("Average File Size", avgFileSize);
+        Bson update5 = set("FilesCollection lastUpdated", lastUpdated);
+        Bson updateOperations = combine(update1, update2, update3, update4, update5);
+        statsCollection.findOneAndUpdate(filter, updateOperations);
     }
+
 
 }

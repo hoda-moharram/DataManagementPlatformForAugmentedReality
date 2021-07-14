@@ -27,9 +27,16 @@ public class CRUD {
 
     // Returns the filesCollection from the MongoDB
     protected static MongoCollection<Document> getFilesCollection(){
-        MongoClient mongoClient = MongoClients.create(System.getProperty("mongodb.uri"));
+        MongoClient mongoClient = MongoClients.create("mongodb+srv://m220student:m220password@cluster0.fehw5.mongodb.net/myFirstDatabase?retryWrites=true&w=majority");
         MongoDatabase sampleTrainingDB = mongoClient.getDatabase("sample_training");
         return sampleTrainingDB.getCollection("ARObjectsDatabase");
+    }
+
+    // Returns the statsCollection from the MongoDB
+    protected static MongoCollection<Document> getStatsCollection(){
+        MongoClient mongoClient = MongoClients.create(System.getProperty("mongodb.uri"));
+        MongoDatabase sampleTrainingDB = mongoClient.getDatabase("sample_training");
+        return sampleTrainingDB.getCollection("AR_DB_Stats");
     }
 
     // String manipulation to retrieve fileName from filePath
