@@ -16,7 +16,7 @@ public class CRUD {
     Here a printWriter is instantiated once to be used for all CRUD operations and keep the log file up to date
     with successful and unsuccessful operations and the reason behind failures
      */
-    protected static PrintWriter out;
+    static PrintWriter out;
     static {
         try {
             out = new PrintWriter(new FileOutputStream("data/LogFile.txt", true));
@@ -30,6 +30,13 @@ public class CRUD {
         MongoClient mongoClient = MongoClients.create(System.getProperty("mongodb.uri"));
         MongoDatabase sampleTrainingDB = mongoClient.getDatabase("sample_training");
         return sampleTrainingDB.getCollection("ARObjectsDatabase");
+    }
+
+    // Returns the statsCollection from the MongoDB
+    protected static MongoCollection<Document> getStatsCollection(){
+        MongoClient mongoClient = MongoClients.create(System.getProperty("mongodb.uri"));
+        MongoDatabase sampleTrainingDB = mongoClient.getDatabase("sample_training");
+        return sampleTrainingDB.getCollection("AR_DB_Stats");
     }
 
     // String manipulation to retrieve fileName from filePath
