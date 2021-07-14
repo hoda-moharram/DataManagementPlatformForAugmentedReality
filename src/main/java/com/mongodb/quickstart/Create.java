@@ -12,12 +12,16 @@ import java.util.*;
 import java.util.List;
 
 import static com.mongodb.client.model.Filters.eq;
-
+/*
+This class is concerned with all create operations in a
+ */
 public class Create {
 
-    private static final Random rand = new Random();
+    /*
+    Here a printWriter is instantiated once to be used for all insert operations and keep the log file up to date
+    with successful and unsuccessful insertions and the reason behind failures
+     */
     static PrintWriter out;
-
     static {
         try {
             out = new PrintWriter(new FileOutputStream("data/LogFile.txt", true));
@@ -121,11 +125,19 @@ public class Create {
                 .append("FileSize in (KB)", fileSize)
                 .append("FileDescription",fileDescription)
                 .append("LastUpdated", date)
-                .append("CreatedOn", date)
-                .append("CountWrites", (Integer) 1)
-                .append("CountReads", (Integer) 0);
+                .append("CreatedOn", date);
         System.out.println(fileName + " " + fileSize + " " + date);
         return fileDoc;
+    }
+
+    private static void updateStatistics(Document fileDoc){
+        try (MongoClient mongoClient = MongoClients.create(System.getProperty("mongodb.uri"))) {
+            MongoDatabase sampleTrainingDB = mongoClient.getDatabase("sample_training");
+            MongoCollection<Document> fileCollections = sampleTrainingDB.getCollection("AR_DB_Stats");
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     private static String getFileName(String filePath){
