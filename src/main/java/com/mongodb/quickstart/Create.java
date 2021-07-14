@@ -15,21 +15,7 @@ import static com.mongodb.client.model.Filters.eq;
 /*
 This class is concerned with all create operations in a
  */
-public class Create {
-
-    /*
-    Here a printWriter is instantiated once to be used for all insert operations and keep the log file up to date
-    with successful and unsuccessful insertions and the reason behind failures
-     */
-    static PrintWriter out;
-    static {
-        try {
-            out = new PrintWriter(new FileOutputStream("data/LogFile.txt", true));
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        }
-
-    }
+public class Create extends CRUD{
 
     public static void main(String[] args) {
         try (MongoClient mongoClient = MongoClients.create(System.getProperty("mongodb.uri"))) {
@@ -43,12 +29,6 @@ public class Create {
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         }
-    }
-
-    private static MongoCollection<Document> getFilesCollection(){
-        MongoClient mongoClient = MongoClients.create(System.getProperty("mongodb.uri"));
-        MongoDatabase sampleTrainingDB = mongoClient.getDatabase("sample_training");
-        return sampleTrainingDB.getCollection("ARObjectsDatabase");
     }
 
     private static void insertOneDocument(String filePath) throws FileNotFoundException {
@@ -125,7 +105,9 @@ public class Create {
                 .append("FileSize in (KB)", fileSize)
                 .append("FileDescription",fileDescription)
                 .append("LastUpdated", date)
-                .append("CreatedOn", date);
+                .append("CreatedOn", date)
+                .append("CountWrites", (Integer) 1)
+                .append("CountReads", (Integer) 0);
         System.out.println(fileName + " " + fileSize + " " + date);
         return fileDoc;
     }
@@ -134,19 +116,20 @@ public class Create {
         try (MongoClient mongoClient = MongoClients.create(System.getProperty("mongodb.uri"))) {
             MongoDatabase sampleTrainingDB = mongoClient.getDatabase("sample_training");
             MongoCollection<Document> fileCollections = sampleTrainingDB.getCollection("AR_DB_Stats");
+            MongoCollection<Document> filesCollection = getFilesCollection();
+            /*
+            As create is the first operation that can be executed from the CRUD operations at the very first create call
+            there will be no stats. In this case we need to create a stats Document
+            */
+            if(fileCollections.countDocuments() == 0){
+                Document statsDoc = new Document("Files Count", "")
+                        .append("CountWrites", (Integer) 1)
+                        .append("CountReads", (Integer) 0);
+            }
 
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-    private static String getFileName(String filePath){
-        int lastSlash = filePath.lastIndexOf("/");
-        String fileName = filePath.substring(lastSlash + 1, filePath.length());
-        return fileName;
-    }
-
-    private static Double getFileSizeKiloBytes(File file) {
-        return (double) file.length() / 1024;
-    }
 }
