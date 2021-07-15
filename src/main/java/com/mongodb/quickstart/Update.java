@@ -10,32 +10,57 @@ import org.bson.conversions.Bson;
 import org.bson.json.JsonWriterSettings;
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Date;
 
 import static com.mongodb.client.model.Filters.eq;
 import static com.mongodb.client.model.Updates.*;
+import static com.mongodb.quickstart.Delete.deleteRecord;
 
 public class Update extends CRUD{
+
+    /*
+    The Update class updates a document by its file path. A user can update a file name, file path, file description, or file size.
+    Any update of any condition would automatically check the validity of the file path, and further update the size, the date the document
+    was last updated, and the number of writes; in order to maintain consistency.
+     */
+
     public static void main (String [] args){
         updateFilePath( "/Users/hodamoharram/Desktop/Bottle.step", "/Users/hodamoharram/Desktop/bachelor\\?/Bottle.step");
 
-
     }
 
+    /*
+        Given the file path, this method updates the file name of a document
+     */
     public static void updateFileName (String filePath, Object value){
         updateOneDocument(filePath, "FileName", value);
-        //requires updating the filePath
     }
+    /*
+        Given the file path, this method updates the file path of a document
+     */
     public static void updateFilePath (String filePath, Object value){
         updateOneDocument(filePath, "FilePath", value);
     }
+    /*
+        Given the file path, this method updates the file description of a document
+     */
     public static void updateDescription (String filePath, Object value){
         updateOneDocument(filePath, "FileDescription", value);
     }
+    /*
+        Given the file path, this method updates the file size of a document
+     */
     public static void updateFileSize (String filePath, Object value){
         updateOneDocument(filePath, "FileSize in (KB)", value);
     }
 
+    /*
+    This method updates a document that satisfy a given condition, updating statistics and also checking file validity and file size
+     */
     private static void updateOneDocument(String filePath, String key, Object value) {
         MongoCollection<Document> filesCollection = getFilesCollection();
         JsonWriterSettings prettyPrint = JsonWriterSettings.builder().indent(true).build();
@@ -79,10 +104,10 @@ public class Update extends CRUD{
 
                         Document document2 = filesCollection.find(new Document("FilePath", filePath)).first();
                         updateStatisticsWDelete(document2, oldSize2);
-                        out.println("File path: " + filePath + " is invalid and removed from database.");
+                        out.println("File path: " + filePath + " is invalid and removed from database."+ new Date());
                     }
                 }
-                out.println("=> Updating the doc with {\"FilePath\":"+ filePath + "}. Updating" + key + value + ".");
+                out.println("=> Updating the doc with {\"FilePath\":"+ filePath + "}. Updating" + key + value + "." + new Date());
             }
             else{
                 if (key=="FilePath"){
@@ -107,9 +132,48 @@ public class Update extends CRUD{
                     updateStatistics(doc, oldSize);
                 }
                 else{
-                    out.println("File path: " + filePath + " is invalid. Update operation failed.");
+                    out.println("File path: " + filePath + " is invalid. Update operation failed." + new Date());
                 }
             }
+        out.flush();
+    }
+    /*
+     * Moves file on the system from the initialFilePath to the new FilePath and updates the database
+     * Only succeeds if the initial filePath was stored in the database and is still valid
+     * Also, the new FilePath needs to be valid
+     */
+    public static void moveFile(String initialFilePath, String newFilePath){
+        Date timeStamp = new Date();
+        MongoCollection<Document> filesCollection = getFilesCollection();
+        Bson filter = eq("FilePath", initialFilePath);
+
+        // If the filePath is not found in the database the operation fails
+        if(filesCollection.countDocuments(filter) == 0){
+            out.println(initialFilePath + " could not be moved as the file path does not exist in the database, on" + timeStamp);
+            out.flush();
+            return;
+        }
+
+        // If filePath is invalid the move operation fail. If the invalid file is in the database it is deleted
+        if(!checkPathValidity(initialFilePath)){
+            out.println(initialFilePath + " could not be moved as the file path does not exist in the file system, on " + timeStamp);
+            deleteRecord(initialFilePath);
+            out.flush();
+            return;
+        }
+
+        //Otherwise move the file
+        try {
+            Path temp = Files.move(Paths.get(initialFilePath), Paths.get(newFilePath));
+            if (temp != null){
+                out.println(initialFilePath + " was moved to " + newFilePath + " on " + timeStamp);
+                updateFilePath(initialFilePath, newFilePath);
+            }else{
+                out.println(initialFilePath + " was not moved to " + newFilePath + " on " + timeStamp);
+            }
+        } catch (IOException e) {
+            out.println(initialFilePath + " was not moved to " + newFilePath + " as the new directory does not exist in the file system on " + timeStamp);
+        }
         out.flush();
     }
     private static void updateStatistics(Document d, Double oldSize){
