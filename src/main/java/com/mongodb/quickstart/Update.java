@@ -17,7 +17,7 @@ import static com.mongodb.client.model.Updates.*;
 
 public class Update extends CRUD{
     public static void main (String [] args){
-        updateFilePath( "/Users/hodamoharram/Desktop/bachelor\\?/Bottle.step","/Users/hodamoharram/Desktop/Bottle.step");
+        updateFilePath( "/Users/hodamoharram/Desktop/Bottle.step", "/Users/hodamoharram/Desktop/bachelor\\?/Bottle.step");
 
 
     }
@@ -48,7 +48,8 @@ public class Update extends CRUD{
 
                 // update the size, writes, and lastUpdate
                 //save old size
-                Document d = filesCollection.find(new Document("FilePath", filePath)).first();
+                Bson filter3 = eq("FilePath", filePath);
+                Document d = filesCollection.find(filter3).first();
                 Double oldSize = (Double) d.get("FileSize in (KB)");
 
 
@@ -56,7 +57,8 @@ public class Update extends CRUD{
                 UpdateResult updateWrites = filesCollection.updateOne(filter, updateWrites(filePath));
                 UpdateResult updateDate = filesCollection.updateOne(filter, updateDate(filePath));
 
-                Document doc = filesCollection.find(new Document("FilePath", filePath)).first();
+                Bson filter4 = eq("FilePath", filePath);
+                Document doc = filesCollection.find(filter4).first();
                 updateStatistics(doc, oldSize);
 
 
@@ -80,22 +82,20 @@ public class Update extends CRUD{
                         out.println("File path: " + filePath + " is invalid and removed from database.");
                     }
                 }
-
-
                 out.println("=> Updating the doc with {\"FilePath\":"+ filePath + "}. Updating" + key + value + ".");
-
             }
             else{
                 if (key=="FilePath"){
+                    //save old size
+                    Bson filter3 = eq("FilePath", filePath);
+                    Document d = filesCollection.find(filter3).first();
+                    Double oldSize = (Double) d.get("FileSize in (KB)");
+
                     UpdateResult updateResult = filesCollection.updateOne(filter, updateOperation);
                     String newFileName = getFileName(value.toString());
                     Bson updateFileNameByPath = set("FileName", newFileName);
                     UpdateResult updateResultName = filesCollection.updateOne(filter, updateFileNameByPath);
                     Bson filter2 = eq("FilePath", value.toString());
-
-                    //save old size
-                    Document d = filesCollection.find(new Document("FilePath", filePath)).first();
-                    Double oldSize = (Double) d.get("FileSize in (KB)");
 
                     // update the size, writes, and lastUpdate
                     UpdateResult updateSizeResult= filesCollection.updateOne(filter2,updateSize(value.toString()));
@@ -103,18 +103,14 @@ public class Update extends CRUD{
                     UpdateResult updateDate = filesCollection.updateOne(filter2, updateDate(value.toString()));
 
                     //update stats
-                    Document doc = filesCollection.find(new Document("FilePath", filePath)).first();
+                    Document doc = filesCollection.find(new Document("FilePath", value)).first();
                     updateStatistics(doc, oldSize);
                 }
                 else{
                     out.println("File path: " + filePath + " is invalid. Update operation failed.");
-
                 }
-
             }
-
         out.flush();
-
     }
     private static void updateStatistics(Document d, Double oldSize){
 
@@ -122,6 +118,8 @@ public class Update extends CRUD{
         File f = new File (fp);
         Double newFileSize = getFileSizeKiloBytes(f);
         Double diff = newFileSize - oldSize;
+        Date lastUpdated = new Date();
+
 
         MongoCollection<Document> stats = getStatsCollection();
 
@@ -139,7 +137,9 @@ public class Update extends CRUD{
         Bson update1 = set("Total Files Storage Space in KB", totalFileSizes);
         Bson update2 = set("CountTotalWrites", totalWritesCount);
         Bson update3 = set("Average File Size", avgFileSize);
-        Bson updateOperations = combine( update1, update2, update3);
+        Bson update4 = set("FilesCollection lastUpdated", lastUpdated);
+
+        Bson updateOperations = combine( update1, update2, update3, update4);
         stats.findOneAndUpdate(filter1, updateOperations);
 
 
@@ -154,7 +154,7 @@ public class Update extends CRUD{
         Document statsDoc = stats.find(filter1).first();
 
 
-
+        Date lastUpdated = new Date();
         int filesCount = (int) statsDoc.get("Files Count");
         Double totalFileSizes = (Double) statsDoc.get("Total Files Storage Space in KB") - oldSize;
         int totalWritesCount = (int) statsDoc.get("CountTotalWrites") + 1;
@@ -164,18 +164,13 @@ public class Update extends CRUD{
         Bson update2 = set("CountTotalWrites", totalWritesCount);
         Bson update3 = set("Average File Size", avgFileSize);
         Bson update4 = set("Files Count", filesCount);
+        Bson update5 = set("FilesCollection lastUpdated", lastUpdated);
 
-        Bson updateOperations = combine( update1, update2, update3, update4);
+        Bson updateOperations = combine( update1, update2, update3, update4, update5);
         stats.findOneAndUpdate(filter1, updateOperations);
 
 
     }
-
-
-
-
-
-
 
     private static boolean checkPathValidity (String filePath){
         File file = new File(filePath);

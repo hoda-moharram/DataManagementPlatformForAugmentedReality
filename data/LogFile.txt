@@ -4,3 +4,17 @@ C:/Users/Zeina Kandil/Downloads/ergonomic-bottle-1.snapshot.2/Bottle.step was no
 C:/Users/Zeina Kandil/Downloads/ergonomic-bottle-1.snapshot.2/Bottle.obj was not added to the database as there is another file with the same file path.
 C:/Users/Zeina Kandil/Downloads/ergonomic-bottle-1.snapshot.2/Bottle.step was not added to the database as there is another file with the same file path.
 C:/Users/Zeina Kandil/Downloads/ergonomic-bottle-1.snapshot.2/Bottle.step was not added to the database as there is another file with the same file path.
+/Users/hodamoharram/Desktop/employer\ testimonial-2.png is an invalid file path and was not added to the database on Thu Jul 15 08:57:01 CEST 2021
+/Users/hodamoharram/Desktop/Eg7qjrqXcAcrLEi.jpg  is an invalid file path and was not added to the database on Thu Jul 15 08:57:01 CEST 2021
+/Users/hodamoharram/Desktop/Eg7qjrqXcAcrLEi.jpg  is an invalid file path and was not added to the database on Thu Jul 15 08:57:01 CEST 2021
+/Users/hodamoharram/Desktop/employer\ testimonial-2.png is an invalid file path and was not added to the database on Thu Jul 15 08:58:27 CEST 2021
+/Users/hodamoharram/Desktop/Eg7qjrqXcAcrLEi.jpg  is an invalid file path and was not added to the database on Thu Jul 15 08:58:27 CEST 2021
+/Users/hodamoharram/Desktop/Eg7qjrqXcAcrLEi.jpg  is an invalid file path and was not added to the database on Thu Jul 15 08:58:27 CEST 2021
+/Users/hodamoharram/Desktop/employer\ testimonial-2.png is an invalid file path and was not added to the database on Thu Jul 15 08:59:22 CEST 2021
+/Users/hodamoharram/Desktop/Eg7qjrqXcAcrLEi.jpg  is an invalid file path and was not added to the database on Thu Jul 15 08:59:22 CEST 2021
+/Users/hodamoharram/Desktop/Eg7qjrqXcAcrLEi.jpg  is an invalid file path and was not added to the database on Thu Jul 15 08:59:22 CEST 2021
+/Users/hodamoharram/Desktop/employer	estimonial-2.png is an invalid file path and was not added to the database on Thu Jul 15 08:59:56 CEST 2021
+/Users/hodamoharram/Desktop/Eg7qjrqXcAcrLEi.jpg  is an invalid file path and was not added to the database on Thu Jul 15 08:59:56 CEST 2021
+/Users/hodamoharram/Desktop/Eg7qjrqXcAcrLEi.jpg  is an invalid file path and was not added to the database on Thu Jul 15 08:59:56 CEST 2021
+/Users/hodamoharram/Desktop/04912803.pdf has been added to the database successfully on Thu Jul 15 09:06:00 CEST 2021
+/Users/hodamoharram/Desktop/editing.pages has been added to the database successfully on Thu Jul 15 09:06:54 CEST 2021
