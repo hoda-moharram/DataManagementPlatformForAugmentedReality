@@ -21,8 +21,15 @@ import static com.mongodb.client.model.Updates.*;
 
 public class Read extends CRUD {
 
+    /*
+    This Read class shows information which the user searches for.
+    Multiple filters are included such as searching by name, a substring of the name or filepath, filepath, description, etc.
+    User can search for one specific document or a list of documents that satisfy the condition.
+    If the record a user is searching for does not exist, a log entry is added in the log file stating that.
+     */
+
     public static void main(String[] args) throws ParseException {
-//        findOneDoc("FileName", "Bottle.step");
+        findListDoc("FilePath", "ze");
 //        findListDoc("FileName", "Bottle.step");
 //        findListDocsByDate("FileSize", "3", "315");
 //        findListDocsBySize("FileSize", 3, 315);
@@ -31,61 +38,89 @@ public class Read extends CRUD {
 //        searchByFileName("editing.pages");
 //        searchListByCreatedOn("2021.07.15");
 
-
     }
-
+    /*
+        This method enables searching by name or a substring of it, retrieving only the first document that meet the condition.
+    */
     public static void searchByFileName(Object name) throws ParseException {
         findOneDoc("FileName", name);
     }
-
+    /*
+        This method enables searching by file path or a substring of it, retrieving only the first document that meet the condition.
+     */
     public static void searchByFilePath(Object path) throws ParseException {
         findOneDoc("FilePath", path);
     }
-
+    /*
+       This method enables searching by the date a document was created on, retrieving only the first document that meet the condition.
+    */
     public static void searchByCreatedOn(Object date) throws ParseException {
         findOneDoc("CreatedOn", date);
     }
-
+    /*
+         This method enables searching by the date on which a document was last updated, retrieving only the first document that meet the condition.
+    */
     public static void searchByLastUpdated(Object date) throws ParseException {
         findOneDoc("LastUpdated", date);
     }
-
+    /*
+       This method enables searching by the size of a document, retrieving only the first document that meet the condition.
+    */
     public static void searchBySize(Object size) throws ParseException {
         findOneDoc("FileSize in (KB)", size);
     }
-
+    /*
+        This method enables searching by name or a substring of it, retrieving all files that meet the condition
+    */
     public static void searchListByFileName(Object name) throws ParseException {
         findListDoc("FileName", name);
     }
-
+    /*
+        This method enables searching by file path or a substring of it, retrieving all files that meet the condition
+    */
     public static void searchListByFilePath(Object path) throws ParseException {
         findListDoc("FilePath", path);
     }
-
+    /*
+       This method enables searching by the date a document was created on, retrieving all files that meet the condition.
+    */
     public static void searchListByCreatedOn(Object date) throws ParseException {
         findListDoc("CreatedOn", date);
     }
-
+    /*
+       This method enables searching by the date on which a document was last updated, retrieving all files that meet the condition.
+    */
     public static void searchListByLastUpdated(Object date) throws ParseException {
         findListDoc("LastUpdated", date);
     }
-
+    /*
+       This method enables searching by the size of a document , retrieving all files that meet the condition.
+    */
     public static void searchListBySize(Object size) throws ParseException {
         findListDoc("FileSize in (KB)", size);
     }
-
+    /*
+       This method enables searching for a document last updated between 2 dates, retrieving all files that meet the condition.
+    */
     public static void searchByLastUpdatedRange(Object start, Object end) throws ParseException {
         findListDocsByDate("LastUpdated", start, end);
     }
-
+    /*
+       This method enables searching for a document that was created between 2 dates, retrieving all files that meet the condition.
+    */
     public static void searchByCreatedOnRange(Object start, Object end) throws ParseException {
         findListDocsByDate("CreatedOn", start, end);
     }
-
+    /*
+       This method enables searching for a document with a size range, retrieving all files that meet the condition.
+    */
     public static void searchBySizeRange(Object start, Object end) {
         findListDocsBySize("FileSize in (KB)", start, end);
     }
 
+    /*
+    This method that fetches the first document that satisfy the condition
+     */
     private static void findOneDoc(String filter, Object value) throws ParseException {
         if (filter == "CreatedOn" || filter == "LastUpdated") {
             SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy.MM.dd");
@@ -101,29 +136,40 @@ public class Read extends CRUD {
             //querying
             BasicDBObject query1 = new BasicDBObject(filter, new BasicDBObject("$gte", startDate).append("$lt", endDate));
             Document d = getFilesCollection().find(query1).first();
+            if (!d.isEmpty()){
+                //updateReads
+                updateReads("FilePath", d.get("FilePath"));
+
+                //update stats
+                updateStatistics(d);
 
 
-            //updateReads
-            updateReads("FilePath", d.get("FilePath"));
+                //printing
+                System.out.println("File 1:" + d.toJson());
+            }
+            else{
+                out.println(filter + ": " + value + " doesn't exist." + new Date());
+            }
 
-            //update stats
-            updateStatistics(d);
-
-
-            //printing
-            System.out.println("File 1:" + d.toJson());
         } else {
-            Document file1 = getFilesCollection().find(new Document(filter, value)).first();
-            System.out.println("File 1 " + file1.toJson());
-            updateReads("FilePath", file1.get("FilePath"));
-            updateStatistics(file1);
+            Document file1 = getFilesCollection().find(regex(filter, (String) value)).first();
+            if (!file1.isEmpty()){
+                System.out.println("File 1 " + file1.toJson());
+                updateReads("FilePath", file1.get("FilePath"));
+                updateStatistics(file1);
+            }
+            else{
+                out.println(filter + ": " + value + " doesn't exist." + new Date());
+            }
+
 
         }
+        out.flush();
     }
 
-
-
-
+    /*
+        This method that fetches all documents that satisfy the condition
+     */
     private static void findListDoc(String filter, Object value) throws ParseException {
 
 
@@ -141,39 +187,43 @@ public class Read extends CRUD {
                 BasicDBObject query1 = new BasicDBObject(filter, new BasicDBObject("$gte",startDate).append("$lt",endDate));
                 List <Document> filesList2 = getFilesCollection().find(query1).into(new ArrayList());
 
-
-                //updateReads
-                for (Document d: filesList2){
-                    updateManyReads("FilePath", d.get("FilePath"));
+                if (!filesList2.isEmpty()){
+                    //update reads
+                    for (Document d: filesList2){
+                        updateManyReads("FilePath", d.get("FilePath"));
+                        updateStatistics(d);
+                    }
+                    System.out.println("File list with an ArrayList:");
+                    for (Document file : filesList2) {
+                        System.out.println(file.toJson());
+                    }
+                }
+                else{
+                    out.println(filter + ": " + value + " doesn't exist." + new Date());
                 }
 
-                //update stats
-                for(Document d: filesList2){
-                    updateStatistics(d);
-                }
 
-                //printing
-                System.out.println("File list with an ArrayList:");
-                for (Document file : filesList2) {
-                    System.out.println(file.toJson());
-                }
             } else {
-                List<Document> filesList2 = getFilesCollection().find(eq(filter, value)).into(new ArrayList<>());
-                //update reads
-                for (Document d: filesList2){
-                    updateManyReads("FilePath", d.get("FilePath"));
+                List<Document> filesList2 = getFilesCollection().find(regex(filter, (String) value)).into(new ArrayList<>());
+                if (!filesList2.isEmpty()){
+                    //update reads
+                    for (Document d: filesList2){
+                        updateManyReads("FilePath", d.get("FilePath"));
+                        updateStatistics(d);
+                    }
+                    System.out.println("File list with an ArrayList:");
+                    for (Document file : filesList2) {
+                        System.out.println(file.toJson());
+                    }
                 }
-                //update stats
-                for(Document d: filesList2){
-                    updateStatistics(d);
+                else{
+                    out.println(filter + ": " + value + " doesn't exist." + new Date());
                 }
 
-                System.out.println("File list with an ArrayList:");
-                for (Document file : filesList2) {
-                    System.out.println(file.toJson());
-                }
             }
-        }
+        out.flush();
+
+    }
 
     private static void findListDocsByDate (String filter, Object from, Object to) throws ParseException {
 
@@ -187,39 +237,47 @@ public class Read extends CRUD {
             BasicDBObject query1 = new BasicDBObject(filter, new BasicDBObject("$gte",start).append("$lt",end));
             List<Document> filesList2 = getFilesCollection().find(query1).into(new ArrayList<>());
 
-            //update Reads
+        if (!filesList2.isEmpty()){
+            //update reads
             for (Document d: filesList2){
                 updateManyReads("FilePath", d.get("FilePath"));
+                updateStatistics(d);
             }
-
-
-            //printing
             System.out.println("File list with an ArrayList:");
             for (Document file : filesList2) {
                 System.out.println(file.toJson());
             }
         }
+        else{
+            out.println(filter + ": " + from + " " + to + " doesn't exist." + new Date());
+        }
+
+    out.flush();
+    }
 
     private static void findListDocsBySize (String filter, Object startSize, Object endSize){
 
             BasicDBObject query1 = new BasicDBObject(filter, new BasicDBObject("$gte", startSize).append("$lt", endSize));
             List<Document> filesList2 = getFilesCollection().find(query1).into(new ArrayList<>());
 
-            //update Reads
+        if (!filesList2.isEmpty()){
+            //update reads
             for (Document d: filesList2){
                 updateManyReads("FilePath", d.get("FilePath"));
-            }
-            //update stats
-            for(Document d: filesList2){
                 updateStatistics(d);
             }
-
-            //printing
             System.out.println("File list with an ArrayList:");
             for (Document file : filesList2) {
                 System.out.println(file.toJson());
             }
         }
+        else{
+            out.println(filter + ": " + startSize + " " + endSize  + " doesn't exist." + new Date());
+        }
+        out.flush();
+
+    }
+
 
 
     private static void updateStatistics(Document d){
